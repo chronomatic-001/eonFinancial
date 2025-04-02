@@ -22,6 +22,9 @@ export default function SignIn() {
     if (email) setEmail(email);
   }, [searchParams]);
 
+  {
+    /*correction - deployment */
+  }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -38,7 +41,7 @@ export default function SignIn() {
         );
         return;
       } else if (signInError) {
-        setError('Invalid email or password');
+        setError(signInError.message); // Now this will properly show the message from AuthError
         return;
       }
 
