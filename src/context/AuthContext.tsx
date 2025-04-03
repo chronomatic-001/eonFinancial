@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     password: string,
     nickname: string,
     selectedPains: number[] = []
-  ) => {
+  ): Promise<{ user: User | null; error: AuthError | null }> => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -79,7 +79,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error?.message?.includes('User already registered')) {
-        return { user: null, error: new Error('User already exists') };
+        return {
+          user: null,
+          error: new Error('User already exists') as AuthError,
+        };
       }
 
       if (data.user) {
@@ -92,14 +95,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (selectionsError && data.user) {
           console.error('Error storing user selections:', selectionsError);
-          return { user: data.user, error: selectionsError };
+          return {
+            user: data.user,
+            error: { message: selectionsError.message } as AuthError,
+          };
         }
       }
 
       return { user: data.user, error: error || null };
     } catch (err) {
       console.error('Error in signUp:', err);
-      return { user: null, error: err as Error };
+      return {
+        user: null,
+        error: { message: (err as Error).message } as AuthError,
+      };
     }
   };
 
