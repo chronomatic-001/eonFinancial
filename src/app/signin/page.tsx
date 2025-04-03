@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react'; // Make sure Suspense is imported and used properly
 import { ArrowRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import Layout from '@/components/Layout';
@@ -22,9 +23,6 @@ export default function SignIn() {
     if (email) setEmail(email);
   }, [searchParams]);
 
-  {
-    /*correction - deployment */
-  }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -32,7 +30,6 @@ export default function SignIn() {
 
     try {
       const { error: signInError } = await signIn(email, password);
-
       if (signInError?.message === 'User not found') {
         setRedirecting(true);
         router.push(
@@ -41,7 +38,7 @@ export default function SignIn() {
         );
         return;
       } else if (signInError) {
-        setError(signInError.message); // Now this will properly show the message from AuthError
+        setError(signInError.message); // Display the message from AuthError
         return;
       }
 

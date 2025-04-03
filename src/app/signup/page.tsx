@@ -17,6 +17,7 @@ export default function SignUp() {
   const searchParams = useSearchParams();
   const [redirecting, setRedirecting] = useState(false);
 
+  // Ensure this part remains the same
   useEffect(() => {
     const message = searchParams.get('message');
     const emailParam = searchParams.get('email');
