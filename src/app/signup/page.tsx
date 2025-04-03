@@ -1,6 +1,12 @@
 'use client';
 
-import React, { useState, Suspense, useEffect } from 'react';
+import React, {
+  useState,
+  Suspense,
+  useEffect,
+  FormEvent,
+  useCallback,
+} from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -17,53 +23,65 @@ export default function SignUp() {
   const searchParams = useSearchParams();
   const [redirecting, setRedirecting] = useState(false);
 
-  // Ensure this part remains the same
   useEffect(() => {
     const message = searchParams.get('message');
     const emailParam = searchParams.get('email');
     if (emailParam) setEmail(emailParam);
   }, [searchParams]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
+  const handleSubmit = useCallback(
+    async (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      setError(null);
+      setLoading(true);
 
-    try {
-      const savedSelections = localStorage.getItem('visitorSelections');
-      const selectedPains = savedSelections ? JSON.parse(savedSelections) : [];
+      try {
+        let selectedPains = [];
+        try {
+          const savedSelections = localStorage.getItem('visitorSelections');
+          selectedPains = savedSelections ? JSON.parse(savedSelections) : [];
+        } catch (localStorageError) {
+          console.error('Error reading from localStorage:', localStorageError);
+          setError('Could not retrieve previous selections. Please try again.');
+          setLoading(false);
+          return;
+        }
 
-      const { user, error: signUpError } = await signUp(
-        email,
-        password,
-        nickname,
-        selectedPains
-      );
-
-      if (signUpError?.message === 'User already exists') {
-        setRedirecting(true);
-        router.push(
-          '/signin?message=Please sign in with your existing account&email=' +
-            encodeURIComponent(email)
+        const { user, error: signUpError } = await signUp(
+          email,
+          password,
+          nickname,
+          selectedPains
         );
-        return;
-      } else if (signUpError) {
-        setError(signUpError.message);
-        return;
-      }
 
-      if (user) {
-        setRedirecting(true);
-        router.push('/#community-section');
+        if (signUpError?.message === 'User already exists') {
+          setRedirecting(true);
+          router.push(
+            '/signin?message=Please sign in with your existing account&email=' +
+              encodeURIComponent(email)
+          );
+          return;
+        } else if (signUpError) {
+          setError(signUpError.message);
+          setLoading(false);
+          return;
+        }
+
+        if (user) {
+          localStorage.removeItem('visitorSelections'); // Clear localStorage after successful signup
+          setRedirecting(true);
+          router.push('/#community-section');
+        }
+      } catch (err) {
+        setError('An unexpected error occurred. Please try again.');
+      } finally {
+        if (!redirecting) {
+          setLoading(false);
+        }
       }
-    } catch (err) {
-      setError('Something went wrong, please try again');
-    } finally {
-      if (!redirecting) {
-        setLoading(false);
-      }
-    }
-  };
+    },
+    [email, password, nickname, signUp, router]
+  );
 
   return (
     <Suspense fallback={<div>Loading...</div>}>

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, FormEvent, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense } from 'react'; // Make sure Suspense is imported and used properly
+import { Suspense } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import Layout from '@/components/Layout';
@@ -17,19 +17,24 @@ export default function SignIn() {
   const searchParams = useSearchParams();
   const [redirecting, setRedirecting] = useState(false);
 
-  useEffect(() => {
+  const getParams = useCallback(() => {
     const message = searchParams.get('message');
-    const email = searchParams.get('email');
-    if (email) setEmail(email);
+    const emailParam = searchParams.get('email');
+    if (emailParam) setEmail(emailParam);
   }, [searchParams]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    getParams();
+  }, [getParams]);
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
       const { error: signInError } = await signIn(email, password);
+
       if (signInError?.message === 'User not found') {
         setRedirecting(true);
         router.push(
@@ -38,14 +43,15 @@ export default function SignIn() {
         );
         return;
       } else if (signInError) {
-        setError(signInError.message); // Display the message from AuthError
+        setError(signInError.message);
+        setLoading(false); // Ensure loading is turned off on error
         return;
       }
 
       setRedirecting(true);
       router.push('/#community-section');
     } catch (err) {
-      setError('Something went wrong, please try again');
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       if (!redirecting) {
         setLoading(false);

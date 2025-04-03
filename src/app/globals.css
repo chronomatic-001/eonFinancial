@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 :root {
+  font-family: 'Roboto', system-ui, sans-serif; /* Updated to use Roboto */
+  line-height: 1.5;
+  font-weight: 400;
   --primary-color: #ffc300;
   --primary-dark: #cc9c00;
   --primary-light: #ffe799;
